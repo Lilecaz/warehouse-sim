@@ -28,6 +28,8 @@ public class Robot {
 
     public List<Node> getCurrentPath() { return currentPath; }
     public void setCurrentPath(List<Node> currentPath) { this.currentPath = currentPath; }
-
+    public void setColor(Color color) {
+        this.color = color;
+    }
     public Color getColor() { return color; }
 }
