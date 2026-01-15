@@ -23,44 +23,50 @@ public class GridPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        g.setColor(new Color(240, 240, 240)); 
+        g.fillRect(0, 0, getWidth(), getHeight());
+
         for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {
                 Node node = grid.getNode(x, y);
                 if (!node.isWalkable) {
-                    g.setColor(Color.BLACK); // Mur
+                    g.setColor(new Color(60, 63, 65)); 
+                    g.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
                 } else {
-                    g.setColor(Color.WHITE); // Libre
+                    g.setColor(new Color(200, 200, 200));
+                    g.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
                 }
-                g.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                
-                g.setColor(new Color(230, 230, 230));
-                g.drawRect(x * cellSize, y * cellSize, cellSize, cellSize);
             }
         }
 
         for (Robot robot : robots) {
-            g.setColor(new Color(robot.getColor().getRed(), robot.getColor().getGreen(), robot.getColor().getBlue(), 100));
+            Node pos = robot.getPosition();
+            Node target = robot.getTarget();
+            Color rColor = robot.getColor();
+
             List<Node> path = robot.getCurrentPath();
-            if (path != null) {
-                try {
-                    for (int i = 0; i < path.size(); i++) {
-                        Node n = path.get(i);
-                        if (n != null) {
-                            g.fillRect(n.x * cellSize + 4, n.y * cellSize + 4, cellSize - 8, cellSize - 8);
-                        }
-                    }
-                } catch (Exception e) {
+            if (path != null && !path.isEmpty()) {
+                g.setColor(new Color(rColor.getRed(), rColor.getGreen(), rColor.getBlue(), 60));
+                for (Node n : path) {
+                    g.fillRect(n.x * cellSize + 5, n.y * cellSize + 5, cellSize - 10, cellSize - 10);
                 }
             }
 
+            if (target != null) {
+                g.setColor(rColor);
+                int tx = target.x * cellSize;
+                int ty = target.y * cellSize;
+                g.drawLine(tx + 2, ty + 2, tx + cellSize - 2, ty + cellSize - 2);
+                g.drawLine(tx + 2, ty + cellSize - 2, tx + cellSize - 2, ty + 2);
+            }
 
-            Node pos = robot.getPosition();
-            
-            g.setColor(robot.getColor());
+            g.setColor(rColor);
             g.fillOval(pos.x * cellSize + 2, pos.y * cellSize + 2, cellSize - 4, cellSize - 4);
             
             g.setColor(Color.BLACK);
             g.drawOval(pos.x * cellSize + 2, pos.y * cellSize + 2, cellSize - 4, cellSize - 4);
+            
+            g.drawString("" + robot.getId(), pos.x * cellSize, pos.y * cellSize);
         }
     }
     

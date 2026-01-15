@@ -64,11 +64,22 @@ public class RobotAgent implements Runnable {
 
     private void moveNextStep() {
         List<Node> path = robot.getCurrentPath();
+        
         if (path != null && !path.isEmpty()) {
             Node nextNode = path.get(0);
-                        
-            robot.setPosition(nextNode);
-            path.remove(0); 
+            Node currentNode = robot.getPosition();
+            synchronized (nextNode) {
+                if (!nextNode.isOccupied()) {
+                    
+                    currentNode.setOccupant(null);
+                    
+                    nextNode.setOccupant(robot);
+                    robot.setPosition(nextNode);
+                    
+                    path.remove(0);
+                } else {
+                }
+            }
         }
     }
 

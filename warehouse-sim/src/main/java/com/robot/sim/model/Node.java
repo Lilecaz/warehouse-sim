@@ -10,6 +10,20 @@ public class Node {
     public double gCost; // Distance depuis le départ
     public double hCost; // Estimation vers l'arrivée (Heuristique)
 
+    private Robot occupant = null;
+
+    public synchronized boolean isOccupied() {
+        return occupant != null;
+    }
+
+    public synchronized void setOccupant(Robot robot) {
+        this.occupant = robot;
+    }
+    
+    public synchronized Robot getOccupant() {
+        return occupant;
+    }
+
     public Node(int x, int y, boolean isWalkable) {
         this.x = x;
         this.y = y;

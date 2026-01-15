@@ -20,16 +20,15 @@ public class App {
         List<Robot> robots = new ArrayList<>();
         List<RobotAgent> agents = new ArrayList<>();
 
-        // 2. Création des Robots et Agents
         Random rand = new Random();
-        for (int i = 0; i < 20; i++) { // On met 20 robots !
-            // Trouver une case vide pour spawner
+        for (int i = 0; i < 20; i++) {
             Node startNode = null;
             while (startNode == null || !startNode.isWalkable) {
                 startNode = grid.getNode(rand.nextInt(width), rand.nextInt(height));
             }
 
             Robot robot = new Robot(i, startNode);
+            startNode.setOccupant(robot);
             robots.add(robot);
 
             RobotAgent agent = new RobotAgent(robot, grid);
@@ -49,11 +48,10 @@ public class App {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-        // 4. Boucle d'affichage (Main Loop)
         while (true) {
             panel.repaint();
             try {
-                Thread.sleep(30); // ~30 FPS pour l'affichage
+                Thread.sleep(30); 
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
