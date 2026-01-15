@@ -13,42 +13,76 @@ public class RobotAgent implements Runnable {
     private Grid grid;
     private boolean running = true;
     private Random random = new Random();
+    private int patience = 0; 
+    private final int MAX_PATIENCE = 5; 
 
     public RobotAgent(Robot robot, Grid grid) {
         this.robot = robot;
         this.grid = grid;
     }
 
-    @Override
+   @Override
     public void run() {
         while (running) {
             try {
-                // 1. Si pas de cible ou cible atteinte, on en choisit une nouvelle
                 if (robot.getTarget() == null || robot.getPosition().equals(robot.getTarget())) {
                     pickNewTarget();
                 }
 
-                // 2. Calcul du chemin (Si pas de chemin ou chemin vide)
                 if (robot.getCurrentPath() == null || robot.getCurrentPath().isEmpty()) {
-                    List<Node> path = AStar.findPath(robot.getPosition(), robot.getTarget(), grid.getNodes());
-                    robot.setCurrentPath(path);
+                    List<Node> path = AStar.findPath(robot.getPosition(), robot.getTarget(), grid.getNodes(), false);
+                    
+                    if (path == null) {
+                         pickNewTarget();
+                    } else {
+                         robot.setCurrentPath(path);
+                    }
                 }
 
-                // 3. Déplacement
                 moveNextStep();
 
-                // 4. Pause (Vitesse du robot)
-                Thread.sleep(200 + random.nextInt(100)); // Entre 200ms et 300ms par case
+                Thread.sleep(200 + random.nextInt(100)); 
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                running = false;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
+    private void moveNextStep() {
+        List<Node> path = robot.getCurrentPath();
+        
+        if (path != null && !path.isEmpty()) {
+            Node nextNode = path.get(0);
+            Node currentNode = robot.getPosition();
+
+            synchronized (nextNode) {
+                if (!nextNode.isOccupied()) {
+                    currentNode.setOccupant(null);
+                    nextNode.setOccupant(robot);
+                    robot.setPosition(nextNode);
+                    path.remove(0);
+                    
+                    patience = 0;
+                } else {
+                    patience++;
+                    
+                    if (patience > MAX_PATIENCE) {
+                        System.out.println("Robot " + robot.getId() + " est coincé -> Recalcul !");
+                        
+                        List<Node> newPath = AStar.findPath(currentNode, robot.getTarget(), grid.getNodes(), true);
+                        
+                        if (newPath != null && !newPath.isEmpty()) {
+                            robot.setCurrentPath(newPath);
+                            patience = 0; // On reset la patience
+                        } else {
+                            pickNewTarget();
+                        }
+                    }
+                }
+            }
+        }
+    }
     private void pickNewTarget() {
         // Choisir une case marchable au hasard
         Node target = null;
@@ -60,27 +94,6 @@ public class RobotAgent implements Runnable {
         robot.setTarget(target);
         // On reset le path pour forcer le recalcul
         robot.setCurrentPath(null);
-    }
-
-    private void moveNextStep() {
-        List<Node> path = robot.getCurrentPath();
-        
-        if (path != null && !path.isEmpty()) {
-            Node nextNode = path.get(0);
-            Node currentNode = robot.getPosition();
-            synchronized (nextNode) {
-                if (!nextNode.isOccupied()) {
-                    
-                    currentNode.setOccupant(null);
-                    
-                    nextNode.setOccupant(robot);
-                    robot.setPosition(nextNode);
-                    
-                    path.remove(0);
-                } else {
-                }
-            }
-        }
     }
 
     public void stop() { this.running = false; }

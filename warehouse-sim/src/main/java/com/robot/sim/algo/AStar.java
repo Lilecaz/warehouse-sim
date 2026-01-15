@@ -30,14 +30,11 @@ public class AStar {
         }
     }
 
-    public static List<Node> findPath(Node start, Node target, Node[][] grid) {
-        // Map pour associer chaque Node de la grille à son Wrapper temporaire pour CE calcul
+    public static List<Node> findPath(Node start, Node target, Node[][] grid, boolean avoidOthers) {
         Map<Node, NodeWrapper> nodeWrappers = new HashMap<>();
-        
         PriorityQueue<NodeWrapper> openSet = new PriorityQueue<>();
         Set<Node> closedSet = new HashSet<>();
 
-        // Initialisation du départ
         NodeWrapper startWrapper = new NodeWrapper(start);
         startWrapper.gCost = 0;
         nodeWrappers.put(start, startWrapper);
@@ -47,7 +44,6 @@ public class AStar {
             NodeWrapper currentWrapper = openSet.poll();
             Node current = currentWrapper.node;
 
-            // Arrivée trouvée
             if (current.equals(target)) {
                 return retracePath(startWrapper, currentWrapper);
             }
@@ -55,31 +51,26 @@ public class AStar {
             closedSet.add(current);
 
             for (Node neighbor : getNeighbors(current, grid)) {
-                if (!neighbor.isWalkable || closedSet.contains(neighbor)) {
+                boolean isOccupiedByOther = avoidOthers && neighbor.isOccupied() && !neighbor.equals(target);
+                
+                if (!neighbor.isWalkable || closedSet.contains(neighbor) || isOccupiedByOther) {
                     continue;
                 }
 
-                // On récupère ou crée le wrapper pour ce voisin
                 NodeWrapper neighborWrapper = nodeWrappers.computeIfAbsent(neighbor, NodeWrapper::new);
-
                 double newCost = currentWrapper.gCost + getDistance(current, neighbor);
 
-                // Si on a trouvé un chemin plus court vers ce voisin
                 if (newCost < neighborWrapper.gCost) {
                     neighborWrapper.gCost = newCost;
                     neighborWrapper.hCost = getDistance(neighbor, target);
                     neighborWrapper.parent = currentWrapper;
-
-                    // Mise à jour dans la file prioritaire
-                    // (Note: remove puis add est nécessaire pour mettre à jour le tri dans PriorityQueue)
                     openSet.remove(neighborWrapper);
                     openSet.add(neighborWrapper);
                 }
             }
         }
-        return null; // Pas de chemin
+        return null;
     }
-
     private static List<Node> retracePath(NodeWrapper startWrapper, NodeWrapper endWrapper) {
         List<Node> path = new ArrayList<>();
         NodeWrapper current = endWrapper;
