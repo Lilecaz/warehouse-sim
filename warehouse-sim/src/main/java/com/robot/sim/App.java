@@ -7,15 +7,36 @@ import com.robot.sim.model.Node;
 import com.robot.sim.model.Robot;
 import com.robot.sim.algo.AABB;
 import com.robot.sim.algo.Quadtree;
-import java.awt.Color;
 
+import java.awt.Color;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane; 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class App {    
+public class App {
+
     public static void main(String[] args) {
+        int maxRobotsLimit = 100; 
+        int numRobots = 20;
+
+        String input = JOptionPane.showInputDialog(null, 
+            "Combien de robots voulez-vous ? (Max " + maxRobotsLimit + ")", 
+            "Configuration", 
+            JOptionPane.QUESTION_MESSAGE);
+
+        try {
+            if (input != null) {
+                numRobots = Integer.parseInt(input);
+                if (numRobots < 1) numRobots = 1;
+                if (numRobots > maxRobotsLimit) numRobots = maxRobotsLimit;
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Entrée invalide, utilisation de la valeur par défaut : " + numRobots);
+        }
+
         int width = 60;
         int height = 40;
         Grid grid = new Grid(width, height);
@@ -23,14 +44,18 @@ public class App {
         List<RobotAgent> agents = new ArrayList<>();
 
         Random rand = new Random();
-        for (int i = 0; i < 20; i++) {
+
+        for (int i = 0; i < numRobots; i++) {
             Node startNode = null;
-            while (startNode == null || !startNode.isWalkable) {
+            
+            int attempts = 0;
+            while (startNode == null || !startNode.isWalkable || (startNode.isOccupied() && attempts < 100)) {
                 startNode = grid.getNode(rand.nextInt(width), rand.nextInt(height));
+                attempts++;
             }
 
             Robot robot = new Robot(i, startNode);
-            startNode.setOccupant(robot);
+            startNode.setOccupant(robot); 
             robots.add(robot);
 
             RobotAgent agent = new RobotAgent(robot, grid);
@@ -39,7 +64,7 @@ public class App {
             new Thread(agent).start();
         }
 
-        JFrame frame = new JFrame("Simulation Multi-Agents A*");
+        JFrame frame = new JFrame("Simu Multi-Agents (" + numRobots + " robots)");
         GridPanel panel = new GridPanel(grid, robots);
         
         frame.add(panel);
@@ -60,6 +85,7 @@ public class App {
                 AABB range = new AABB(r.getPosition().x, r.getPosition().y, 3);
                 List<Robot> neighbors = qt.query(range, null);
                 
+                // Si plus de 3 voisins -> ROUGE
                 if (neighbors.size() > 3) {
                     r.setColor(Color.RED); 
                 } else {
