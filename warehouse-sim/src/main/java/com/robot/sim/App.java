@@ -37,8 +37,15 @@ public class App {
             System.err.println("Entrée invalide, utilisation de la valeur par défaut : " + numRobots);
         }
 
-        int width = 60;
-        int height = 40;
+        int areaNeeded = numRobots * 30; 
+        int calculatedWidth = (int) Math.sqrt(areaNeeded * 1.5);
+        int calculatedHeight = (int) Math.sqrt(areaNeeded / 1.5);
+
+        int width = Math.max(40, Math.min(200, calculatedWidth));
+        int height = Math.max(30, Math.min(200, calculatedHeight));
+
+        System.out.println("Grille générée : " + width + "x" + height);
+
         Grid grid = new Grid(width, height);
         List<Robot> robots = new ArrayList<>();
         List<RobotAgent> agents = new ArrayList<>();

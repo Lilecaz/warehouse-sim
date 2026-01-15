@@ -6,14 +6,12 @@ import java.util.*;
 public class AStar {
 
     /**
-     * Classe interne pour stocker les données de calcul A* (Coûts, Parent)
-     * de manière isolée pour chaque Thread.
-     * Ainsi, la grille (Node) reste propre et partagée.
+     * Classe interne pour isoler les calculs de chaque thread.
      */
     private static class NodeWrapper implements Comparable<NodeWrapper> {
         Node node;
         NodeWrapper parent;
-        double gCost = Double.MAX_VALUE; // Infini par défaut
+        double gCost = Double.MAX_VALUE;
         double hCost = 0;
 
         public NodeWrapper(Node node) {
@@ -30,7 +28,8 @@ public class AStar {
         }
     }
 
-    public static List<Node> findPath(Node start, Node target, Node[][] grid, boolean avoidOthers) {
+    public static List<Node> findPath(Node start, Node target, Node[][] grid) {
+        // Map locale pour ce calcul précis
         Map<Node, NodeWrapper> nodeWrappers = new HashMap<>();
         PriorityQueue<NodeWrapper> openSet = new PriorityQueue<>();
         Set<Node> closedSet = new HashSet<>();
@@ -51,31 +50,42 @@ public class AStar {
             closedSet.add(current);
 
             for (Node neighbor : getNeighbors(current, grid)) {
-                boolean isOccupiedByOther = avoidOthers && neighbor.isOccupied() && !neighbor.equals(target);
-                
-                if (!neighbor.isWalkable || closedSet.contains(neighbor) || isOccupiedByOther) {
+                // Si mur ou déjà traité, on passe
+                if (!neighbor.isWalkable || closedSet.contains(neighbor)) {
                     continue;
                 }
 
+                // --- LOGIQUE ANTI-BOUCHON ---
+                double moveCost = 1.0;
+                
+                // Si la case est occupée par un autre robot (et ce n'est pas l'arrivée)
+                // On met un coût très élevé (50) pour forcer le robot à contourner
+                if (neighbor.isOccupied() && !neighbor.equals(target)) {
+                    moveCost = 50.0;
+                }
+                // ----------------------------
+
                 NodeWrapper neighborWrapper = nodeWrappers.computeIfAbsent(neighbor, NodeWrapper::new);
-                double newCost = currentWrapper.gCost + getDistance(current, neighbor);
+                double newCost = currentWrapper.gCost + moveCost;
 
                 if (newCost < neighborWrapper.gCost) {
                     neighborWrapper.gCost = newCost;
                     neighborWrapper.hCost = getDistance(neighbor, target);
                     neighborWrapper.parent = currentWrapper;
+
+                    // Mise à jour de la PriorityQueue
                     openSet.remove(neighborWrapper);
                     openSet.add(neighborWrapper);
                 }
             }
         }
-        return null;
+        return null; // Pas de chemin trouvé
     }
+
     private static List<Node> retracePath(NodeWrapper startWrapper, NodeWrapper endWrapper) {
         List<Node> path = new ArrayList<>();
         NodeWrapper current = endWrapper;
 
-        // On remonte la chaîne des parents via les Wrappers
         while (current != startWrapper) {
             path.add(current.node);
             current = current.parent;
