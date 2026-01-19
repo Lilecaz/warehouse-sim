@@ -8,7 +8,7 @@ This application simulates a warehouse environment where agents (robots) must na
 
 ## Key Features
 
-* **Custom A* Pathfinding**: Implementation of the A* algorithm from scratch, optimized for grid-based navigation with dynamic weighting.
+* **Custom Astar Pathfinding**: Implementation of the A* algorithm from scratch, optimized for grid-based navigation with dynamic weighting.
 * **Multi-Threaded Architecture**: Each robot operates as an independent agent (Thread) with its own decision-making loop, simulating a true distributed system.
 * **Spatial Optimization (Quadtree)**: Implementation of a Quadtree structure to handle proximity queries efficiently (O(N log N)), allowing for real-time density analysis.
 * **Advanced Collision Avoidance**: A hybrid strategy to resolve deadlocks and traffic jams without central control.
