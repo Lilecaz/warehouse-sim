@@ -15,7 +15,6 @@ public class RobotAgent implements Runnable {
     private Random random = new Random();
     
     private int patience = 0;
-    private final int MAX_PATIENCE = 5; 
 
     public RobotAgent(Robot robot, Grid grid) {
         this.robot = robot;
